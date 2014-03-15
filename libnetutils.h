@@ -130,7 +130,7 @@ void send_to_client (int socket) {
     write(socket, time_buffer, strlen(time_buffer));
 }
 
-void handle_incoming_client (int socket) {
+void handle_incoming_client (int socket, int use_syslog) {
     int fresh_socket, close_status;
     struct sockaddr_in address;
     socklen_t address_len = sizeof(struct sockaddr_in);
@@ -154,6 +154,11 @@ void handle_incoming_client (int socket) {
 
         /* send message to client */
         send_to_client(fresh_socket);
+
+        /* if we are would like use syslog */
+        if (use_syslog == 1) {
+            syslog(LOG_NOTICE, "Successfully serve client %s:%d", ip, port);
+        }
 
         /* close connection with client */
         close_status = close(fresh_socket);
