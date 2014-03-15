@@ -170,51 +170,51 @@ void handle_incoming_client (int socket) {
 void demonize () {
     pid_t pid, sid;
     int chdir_status, fd; 
-    
+
     /* check if already is daemon */
     if ( getppid() == 1 ) {
         fprintf(stderr, "ERROR: unable to demonize, becouse is already daemon\n");
         exit(EXIT_FAILURE);
     }
-    
+
     /* fork current process */
     pid = fork();
-    
+
     if (pid < 0) {
         fprintf(stderr, "ERROR: unable to demonize: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
+
     if (pid > 0) {
         /* parent dead */
         exit(EXIT_SUCCESS);
     }
-    
+
     /* create a new SID for the child process */
     sid = setsid();
-    
+
     signal(SIGHUP,SIG_IGN);
-    
+
     pid = fork();
 
     if (pid != 0) {
         /* first child dead */
         exit(EXIT_SUCCESS);
     }
-    
+
     if (sid < 0) {
         fprintf(stderr, "ERROR: unable to create new SID: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
+
     /* change the current working directory */
     chdir_status = chdir("/");
-    
+
     if (chdir_status < 0) {
         fprintf(stderr, "ERROR: unable to change directory to /: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
-    
+
     /* close other descriptors */
     fd = open("/dev/null", O_RDWR, 0);
 
@@ -227,7 +227,7 @@ void demonize () {
             close (fd);
         }
     }
-    
+
     /* resetting file creation mask */
     umask(027);
 }
