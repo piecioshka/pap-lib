@@ -16,10 +16,6 @@
 
 #define MAX_BUFFER 128
 
-void test_console_lib () {
-    printf("library \"console.h\" is exists!\n");
-}
-
 int create_socket (int family) {
     int socket_id;
 
