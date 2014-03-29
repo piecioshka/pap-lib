@@ -46,27 +46,6 @@ int create_socket_tcp () {
     return create_socket(SOCK_STREAM);
 }
 
-int create_connection (int socket, struct sockaddr_in address) {
-    int connect_status;
-    struct in_addr client_ip = address.sin_addr;
-    char * ip = inet_ntoa(client_ip);
-    unsigned short port = ntohs(address.sin_port);
-
-    printf("[-] Trying connection %s:%d...\n", ip, port);
-
-    connect_status = connect(socket, (struct sockaddr *) & address, sizeof(struct sockaddr));
-
-    if (connect_status == -1) {
-        fprintf(stderr, "ERROR: unable to create connection to socket %d: %s\n", socket, strerror(errno));
-        exit(EXIT_FAILURE);
-        return connect_status;
-    }
-
-    printf("[+] Connected with socket %d\n", socket);
-
-    return connect_status;
-}
-
 int close_connection (int socket) {
      int status = close(socket);
 
@@ -94,20 +73,6 @@ int bind_port (int socket, struct sockaddr_in address) {
     printf("[+] Bind port %d\n", port);
 
     return bind_status;
-}
-
-int listen_for_client (int socket, int backlog) {
-    int listen_status = listen(socket, backlog);
-
-    if (listen_status == -1) {
-        fprintf(stderr, "ERROR: unable to bind for socket %d with backlog %d: %s\n", socket, backlog, strerror(errno));
-        exit(EXIT_FAILURE);
-        return listen_status;
-    }
-
-    printf("[+] Listening for socket %d with backlog %d\n", socket, backlog);
-
-    return listen_status;
 }
 
 void demonize () {
@@ -175,6 +140,44 @@ void demonize () {
     umask(027);
 }
 
+/*****************************************************************************/
+/* TCP */
+/*****************************************************************************/
+
+int create_connection_tcp (int socket, struct sockaddr_in address) {
+    int connect_status;
+    struct in_addr client_ip = address.sin_addr;
+    char * ip = inet_ntoa(client_ip);
+    unsigned short port = ntohs(address.sin_port);
+
+    printf("[-] Trying connection %s:%d...\n", ip, port);
+
+    connect_status = connect(socket, (struct sockaddr *) & address, sizeof(struct sockaddr));
+
+    if (connect_status == -1) {
+        fprintf(stderr, "ERROR: unable to create connection to socket %d: %s\n", socket, strerror(errno));
+        exit(EXIT_FAILURE);
+        return connect_status;
+    }
+
+    printf("[+] Connected with socket %d\n", socket);
+
+    return connect_status;
+}
+
+int listen_for_client_tcp (int socket, int backlog) {
+    int listen_status = listen(socket, backlog);
+
+    if (listen_status == -1) {
+        fprintf(stderr, "ERROR: unable to bind for socket %d with backlog %d: %s\n", socket, backlog, strerror(errno));
+        exit(EXIT_FAILURE);
+        return listen_status;
+    }
+
+    printf("[+] Listening for socket %d with backlog %d\n", socket, backlog);
+
+    return listen_status;
+}
 
 /*****************************************************************************/
 /* Custom */
