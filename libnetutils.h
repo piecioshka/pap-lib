@@ -60,9 +60,16 @@ int close_connection (int socket) {
      return status;
 }
 
-int bind_port (int socket, struct sockaddr_in address) {
+int bind_port (int socket, int port) {
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_ANY);
+    address.sin_port = htons(port);
+    memset( &( address.sin_zero ), '\0', 8 );
+
     int bind_status = bind(socket, (struct sockaddr *) & address, sizeof(struct sockaddr));
-    unsigned short port = ntohs(address.sin_port);
+    // unsigned short port = ntohs(address.sin_port);
 
     if (bind_status == -1) {
         fprintf(stderr, "ERROR: unable to bind port %d: %s\n", port, strerror(errno));
@@ -144,11 +151,14 @@ void demonize () {
 /* TCP */
 /*****************************************************************************/
 
-int create_connection_tcp (int socket, struct sockaddr_in address) {
+int create_connection_tcp (int socket, char * ip, int port) {
     int connect_status;
-    struct in_addr client_ip = address.sin_addr;
-    char * ip = inet_ntoa(client_ip);
-    unsigned short port = ntohs(address.sin_port);
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = inet_addr(ip);
+    address.sin_port = htons(port);
+    memset( &( address.sin_zero ), '\0', 8 );
 
     printf("[-] Trying connection %s:%d...\n", ip, port);
 
