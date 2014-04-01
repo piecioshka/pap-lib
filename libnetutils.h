@@ -151,7 +151,7 @@ void demonize () {
 /* TCP */
 /*****************************************************************************/
 
-int create_connection_tcp (int socket, char * ip, int port) {
+int create_connection_tcp (int socket, const char * ip, int port) {
     int connect_status;
     struct sockaddr_in address;
 
