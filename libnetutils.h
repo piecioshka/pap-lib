@@ -147,6 +147,61 @@ void demonize () {
     umask(027);
 }
 
+void handle_incoming_client (int socket, void (*func)(), int use_syslog) {
+    int fresh_socket, close_status;
+    struct sockaddr_in address;
+    socklen_t address_len = sizeof(struct sockaddr_in);
+    struct in_addr client_ip;
+    char * ip;
+    unsigned short port;
+
+    /* waiting for something happen */
+    while ( 1 ) {
+        /* accept connection with client from from queue */
+        fresh_socket = accept(socket, (struct sockaddr *) & address, & address_len);
+        client_ip = address.sin_addr;
+        ip = inet_ntoa(client_ip);
+        port = ntohs(address.sin_port);
+
+        if (fresh_socket == -1) {
+            fprintf(stderr, "ERROR: unable to accept client %s:%d: %s\n", ip, port, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        printf("[+] Accept client %s:%d\n", ip, port);
+
+        /* send message to client */
+        func(fresh_socket);
+        // send_time_to_socket(fresh_socket);
+
+        /* if we are would like use syslog */
+        if (use_syslog == 1) {
+            syslog(LOG_NOTICE, "Successfully serve client %s:%d", ip, port);
+        }
+
+        /* close connection with client */
+        close_status = close(fresh_socket);
+
+        if (close_status == -1) {
+            fprintf(stderr, "ERROR: unable to close connection with client %s:%d: %s\n", ip, port, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        printf("[+] Close client %s:%d\n\n", ip, port);
+    }
+}
+
+void receive_from_server (int socket) {
+    int in;
+    char buffer[MAX_BUFFER + 1];
+
+    /* get data from client */
+    while ((in = read(socket, buffer, MAX_BUFFER)) > 0) {
+        buffer[in] = 0;
+        printf("\n%s", buffer);
+    }
+}
+
 /*****************************************************************************/
 /* TCP */
 /*****************************************************************************/
@@ -193,70 +248,23 @@ int listen_for_client_tcp (int socket, int backlog) {
 /* Custom */
 /*****************************************************************************/
 
-void receive_from_server (int socket) {
-    int in;
+void send_time_to_socket (int socket) {
     char buffer[MAX_BUFFER + 1];
-
-    /* get data from client */
-    while ( (in = read(socket, buffer, MAX_BUFFER)) > 0 ) {
-        buffer[in] = 0;
-        printf("\n%s", buffer);
-    }
-}
-
-void send_to_client (int socket) {
-    char time_buffer[MAX_BUFFER + 1];
     time_t current_time;
 
     current_time = time(NULL);
-    snprintf(time_buffer, MAX_BUFFER, "%s\n", ctime(&current_time));
+    snprintf(buffer, MAX_BUFFER, "%s\n", ctime(&current_time));
 
-    write(socket, time_buffer, strlen(time_buffer));
+    write(socket, buffer, strlen(buffer));
+}
+
+void send_uptime_to_socket (int socket) {
+    char buffer[MAX_BUFFER + 1];
+    snprintf(buffer, MAX_BUFFER, "%s\n", system("uptime"));
+    write(socket, buffer, strlen(buffer));
 }
 
 void send_empty_datagram (int socket) {
-    write(socket, NULL, 0);
+    sendto(socket, NULL, 0);
 }
 
-void handle_incoming_client (int socket, int use_syslog) {
-    int fresh_socket, close_status;
-    struct sockaddr_in address;
-    socklen_t address_len = sizeof(struct sockaddr_in);
-    struct in_addr client_ip;
-    char * ip;
-    unsigned short port;
-
-    /* waiting for something happen */
-    while ( 1 ) {
-        /* accept connection with client from from queue */
-        fresh_socket = accept(socket, (struct sockaddr *) & address, & address_len);
-        client_ip = address.sin_addr;
-        ip = inet_ntoa(client_ip);
-        port = ntohs(address.sin_port);
-
-        if (fresh_socket == -1) {
-            fprintf(stderr, "ERROR: unable to accept client %s:%d: %s\n", ip, port, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        printf("[+] Accept client %s:%d\n", ip, port);
-
-        /* send message to client */
-        send_to_client(fresh_socket);
-
-        /* if we are would like use syslog */
-        if (use_syslog == 1) {
-            syslog(LOG_NOTICE, "Successfully serve client %s:%d", ip, port);
-        }
-
-        /* close connection with client */
-        close_status = close(fresh_socket);
-
-        if (close_status == -1) {
-            fprintf(stderr, "ERROR: unable to close connection with client %s:%d: %s\n", ip, port, strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-
-        printf("[+] Close client %s:%d\n\n", ip, port);
-    }
-}
