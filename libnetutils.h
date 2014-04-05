@@ -260,7 +260,7 @@ void send_time_to_socket (int socket) {
 
 void send_uptime_to_socket (int socket) {
     char buffer[MAX_BUFFER + 1];
-    snprintf(buffer, MAX_BUFFER, "%s\n", system("uptime"));
+    snprintf(buffer, MAX_BUFFER, "%s\n", shellcmd("uptime"));
     write(socket, buffer, strlen(buffer));
 }
 
