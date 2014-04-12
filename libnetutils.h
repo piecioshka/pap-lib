@@ -265,6 +265,6 @@ void send_uptime_to_socket (int socket) {
 }
 
 void send_empty_datagram (int socket) {
-    sendto(socket, NULL, 0);
+    sendto(socket, NULL, 13);
 }
 
