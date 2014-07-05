@@ -260,11 +260,10 @@ void send_time_to_socket (int socket) {
 
 void send_uptime_to_socket (int socket) {
     char buffer[MAX_BUFFER + 1];
-    snprintf(buffer, MAX_BUFFER, "%s\n", shellcmd("uptime"));
+    snprintf(buffer, MAX_BUFFER, "%d\n", shellcmd("uptime"));
     write(socket, buffer, strlen(buffer));
 }
 
 void send_empty_datagram (int socket) {
-    sendto(socket, NULL, 13);
+    /* TODO(piecioshka): fill it */
 }
-
